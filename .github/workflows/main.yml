@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Package
+        shell: bash
+        run: |
+          mkdir dist
+          cp build/Release/CrashTest.exe dist/
+          cp -r assets dist/assets
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CrashTest-windows
+          path: dist
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxkbcommon-dev
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build -j
+      - name: Package
+        run: |
+          mkdir dist
+          cp build/CrashTest dist/
+          cp -r assets dist/assets
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CrashTest-linux
+          path: dist
